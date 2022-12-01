@@ -54,6 +54,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setupViewModel() {
+
         registerViewModel = ViewModelProvider(
             this@RegisterActivity,
             ViewModelFactory(UserPreference.getInstance(dataStore))
@@ -64,10 +65,15 @@ class RegisterActivity : AppCompatActivity() {
         ) { loader ->
             showLoading(loader)
         }
+
     }
 
     private fun setupAction() {
         binding.registerButton.setOnClickListener {
+
+            binding.nameEditTextLayout.isErrorEnabled = false
+            binding.emailEditTextLayout.isErrorEnabled = false
+
             val name = binding.edRegisterName.text.toString()
             val email = binding.edRegisterEmail.text.toString()
             val password = binding.edRegisterPassword.text.toString()
@@ -110,16 +116,13 @@ class RegisterActivity : AppCompatActivity() {
         }.start()
 
         val title = ObjectAnimator.ofFloat(binding.titleTextView, View.ALPHA, 1f).setDuration(500)
-        val nameTitle = ObjectAnimator.ofFloat(binding.nameTextView, View.ALPHA, 1f).setDuration(500)
         val nameEdit = ObjectAnimator.ofFloat(binding.nameEditTextLayout, View.ALPHA, 1f).setDuration(500)
-        val emailTitle = ObjectAnimator.ofFloat(binding.emailTextView, View.ALPHA, 1f).setDuration(500)
         val emailEdit = ObjectAnimator.ofFloat(binding.emailEditTextLayout, View.ALPHA, 1f).setDuration(500)
-        val passTitle = ObjectAnimator.ofFloat(binding.passwordTextView, View.ALPHA, 1f).setDuration(500)
         val passEdit = ObjectAnimator.ofFloat(binding.passwordEditTextLayout, View.ALPHA, 1f).setDuration(500)
         val register = ObjectAnimator.ofFloat(binding.registerButton, View.ALPHA, 1f).setDuration(500)
 
         AnimatorSet().apply {
-            playSequentially(title, nameTitle, nameEdit, emailTitle, emailEdit, passTitle, passEdit, register)
+            playSequentially(title, nameEdit, emailEdit, passEdit, register)
             start()
         }
     }

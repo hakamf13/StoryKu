@@ -11,4 +11,9 @@
     <string name="password">Password</string>
     <string name="title_register_page">Lengkapi data dirimu dibawah ini ya</string>
     <string name="name">Nama</string>
+    <string name="masukkan_nama">Masukkan Nama</string>
+    <string name="masukkan_email">Masukkan Email</string>
+    <string name="masukkan_password">Masukkan Password</string>
+    <string name="description">Deskripsi</string>
+    <string name="logout">keluar</string>
 </resources>
