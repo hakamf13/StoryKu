@@ -19,7 +19,7 @@ class StoryAdapter(private val storyList: ArrayList<ListStory>)
 
     private lateinit var onItemClickCallback: OnItemClickCallback
 
-    inner class ListViewHolder(var binding: StoryListItemBinding): RecyclerView.ViewHolder(binding.root) {
+    inner class ListViewHolder(private var binding: StoryListItemBinding): RecyclerView.ViewHolder(binding.root) {
 
 //        private var photo = binding.imageItemStory
 //        private var

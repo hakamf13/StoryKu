@@ -31,8 +31,6 @@ interface ApiService {
     fun getStory(
         @Part file: MultipartBody.Part,
         @Part("description") description: RequestBody,
-        @Part("lat") lat: Float?,
-        @Part("lon") lon: Float?,
         @Header("Authorization") authorization: String
     ): Call<AddNewStoryResponse>
 

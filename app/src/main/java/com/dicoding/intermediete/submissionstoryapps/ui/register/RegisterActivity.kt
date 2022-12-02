@@ -14,7 +14,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
-import com.dicoding.intermediete.submissionstoryapps.R
 import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResult

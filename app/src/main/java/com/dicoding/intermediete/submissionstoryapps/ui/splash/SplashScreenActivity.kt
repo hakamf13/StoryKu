@@ -1,5 +1,6 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.splash
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import com.dicoding.intermediete.submissionstoryapps.R
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivitySplashScreenBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
 
+@SuppressLint("CustomSplashScreen")
 class SplashScreenActivity : AppCompatActivity() {
 
     companion object {

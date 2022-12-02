@@ -26,7 +26,7 @@ class MainViewModel(private val pref: UserPreference): ViewModel() {
 
     private var job: Job ?= null
 
-    val errorMessage = MutableLiveData<String>()
+//    val errorMessage = MutableLiveData<String>()
 
     fun getUserToken(): LiveData<User> {
         return pref.getUserToken().asLiveData()

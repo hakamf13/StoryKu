@@ -35,10 +35,4 @@ data class ListStory(
     @field:SerializedName("createdAt")
     val createdAt: String,
 
-    @field:SerializedName("lat")
-    val lat: Float,
-
-    @field:SerializedName("lon")
-    val lon: Float
-
 ) : Parcelable

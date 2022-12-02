@@ -22,7 +22,7 @@ class ViewModelFactory(private val pref: UserPreference): ViewModelProvider.NewI
             }
 
             modelClass.isAssignableFrom(RegisterViewModel::class.java) -> {
-                RegisterViewModel(pref) as T
+                RegisterViewModel() as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)

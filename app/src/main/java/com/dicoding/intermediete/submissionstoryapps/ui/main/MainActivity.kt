@@ -98,9 +98,7 @@ class MainActivity : AppCompatActivity() {
                         story.name,
                         story.description,
                         story.photoUrl,
-                        story.createdAt,
-                        story.lat,
-                        story.lon
+                        story.createdAt
                     )
                 )
             }
@@ -112,19 +110,19 @@ class MainActivity : AppCompatActivity() {
             showLoading(loader)
         }
 
-        mainViewModel.errorMessage.observe(this@MainActivity) {
-            when (it) {
-                "Stories fetched successfully" -> {
-                    Toast.makeText(this@MainActivity, getString(R.string.fetchedSuccess), Toast.LENGTH_SHORT).show()
-                }
-                "onFailure" -> {
-                    Toast.makeText(this@MainActivity, getString(R.string.failureMessage), Toast.LENGTH_SHORT).show()
-                }
-                else -> {
-                    Toast.makeText(this@MainActivity, getString(R.string.notFound), Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+//        mainViewModel.errorMessage.observe(this@MainActivity) {
+//            when (it) {
+//                "Stories fetched successfully" -> {
+//                    Toast.makeText(this@MainActivity, getString(R.string.fetchedSuccess), Toast.LENGTH_SHORT).show()
+//                }
+//                "onFailure" -> {
+//                    Toast.makeText(this@MainActivity, getString(R.string.failureMessage), Toast.LENGTH_SHORT).show()
+//                }
+//                else -> {
+//                    Toast.makeText(this@MainActivity, getString(R.string.notFound), Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
 
         mainViewModel.getUserToken().observe(
             this@MainActivity

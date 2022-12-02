@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResponse
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResult
@@ -13,7 +12,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class RegisterViewModel(private val pref: UserPreference): ViewModel() {
+class RegisterViewModel: ViewModel() {
 
     companion object {
         const val TAG = "RegisterViewModel"
