@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -13,6 +14,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.dicoding.intermediete.submissionstoryapps.R
 import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
@@ -33,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var mainViewModel: MainViewModel
+
+    private lateinit var rvStoryList: RecyclerView
 
     private val storyList = ArrayList<ListStory>()
 
@@ -64,17 +68,21 @@ class MainActivity : AppCompatActivity() {
         }
         supportActionBar?.hide()
 
-        val layoutManager = LinearLayoutManager(this)
-        binding.rvStoryList.layoutManager = layoutManager
-        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
-        binding.rvStoryList.addItemDecoration(itemDecoration)
+        rvStoryList = binding.rvStoryList
+        rvStoryList.setHasFixedSize(true)
+//        val layoutManager = LinearLayoutManager(this)
+//        binding.rvStoryList.layoutManager = layoutManager
+//        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+//        binding.rvStoryList.addItemDecoration(itemDecoration)
     }
 
     private fun setupViewModel() {
 
         val storyListAdapter = StoryAdapter(storyList)
-        binding.rvStoryList.adapter = storyListAdapter
-        binding.rvStoryList.layoutManager = LinearLayoutManager(this)
+        rvStoryList.layoutManager = LinearLayoutManager(this@MainActivity)
+        rvStoryList.adapter = storyListAdapter
+//        binding.rvStoryList.adapter = storyListAdapter
+//        binding.rvStoryList.layoutManager = LinearLayoutManager(this)
 
         mainViewModel = ViewModelProvider(
             this@MainActivity,
@@ -102,6 +110,20 @@ class MainActivity : AppCompatActivity() {
             this@MainActivity
         ) { loader ->
             showLoading(loader)
+        }
+
+        mainViewModel.errorMessage.observe(this@MainActivity) {
+            when (it) {
+                "Stories fetched successfully" -> {
+                    Toast.makeText(this@MainActivity, getString(R.string.fetchedSuccess), Toast.LENGTH_SHORT).show()
+                }
+                "onFailure" -> {
+                    Toast.makeText(this@MainActivity, getString(R.string.failureMessage), Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    Toast.makeText(this@MainActivity, getString(R.string.notFound), Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         mainViewModel.getUserToken().observe(

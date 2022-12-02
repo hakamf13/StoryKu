@@ -16,4 +16,13 @@
     <string name="masukkan_password">Masukkan Password</string>
     <string name="description">Deskripsi</string>
     <string name="logout">keluar</string>
+    <string name="fetchedSuccess">Fetch Success</string>
+    <string name="failureMessage">Response not Found</string>
+    <string name="notFound">Not Found</string>
+    <string name="title_preview_image">Preview</string>
+    <string name="kamera">KAMERA</string>
+    <string name="galeri">GALERI</string>
+    <string name="title_decriptionImage">Deskripsi</string>
+    <string name="masukkan_deskripsi">Masukkan Deskripsi</string>
+    <string name="unggah">UNGGAH</string>
 </resources>
