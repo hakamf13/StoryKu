@@ -19,10 +19,6 @@ import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivit
 
 class CameraActivity : AppCompatActivity() {
 
-    companion object {
-        const val EXTRA_PHOTO = "extra_photo"
-    }
-
     private val binding: ActivityCameraBinding by lazy {
         ActivityCameraBinding.inflate(layoutInflater)
     }
@@ -125,12 +121,12 @@ class CameraActivity : AppCompatActivity() {
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     val intent = Intent()
-                    intent.putExtra(EXTRA_PHOTO, photoFile)
+                    intent.putExtra("picture", photoFile)
                     intent.putExtra(
                         "isBackCamera",
                         cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA
                     )
-                    setResult(AddNewStoryActivity.RESULT_OK, intent)
+                    setResult(AddNewStoryActivity.CAMERA_X_RESULT, intent)
                     finish()
                 }
             }

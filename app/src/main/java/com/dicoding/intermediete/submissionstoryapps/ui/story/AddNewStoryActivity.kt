@@ -4,12 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -17,31 +17,27 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
-import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
-import com.dicoding.intermediete.submissionstoryapps.compressQuality
+import com.dicoding.intermediete.submissionstoryapps.*
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityAddNewStoryBinding
-import com.dicoding.intermediete.submissionstoryapps.rotateBitmap
-import com.dicoding.intermediete.submissionstoryapps.ui.camera.CameraActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
-import com.dicoding.intermediete.submissionstoryapps.uriToFile
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
-import java.io.FileOutputStream
 
 @Suppress("DEPRECATION")
 class AddNewStoryActivity : AppCompatActivity() {
 
     companion object {
-        const val RESULT_OK = 200
+        const val CAMERA_X_RESULT = 200
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val REQUEST_CODE_PERMISSIONS = 10
     }
@@ -53,8 +49,10 @@ class AddNewStoryActivity : AppCompatActivity() {
     }
 
     private lateinit var addNewStoryViewModel: AddNewStoryViewModel
-
     private lateinit var token: String
+    private lateinit var currentPhotoPath: String
+
+    private var getFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +101,7 @@ class AddNewStoryActivity : AppCompatActivity() {
                     this@AddNewStoryActivity,
                     WelcomeActivity::class.java
                 ))
+                finish()
             }
         }
 
@@ -132,10 +131,20 @@ class AddNewStoryActivity : AppCompatActivity() {
 
     private fun startCamera() {
         val intent = Intent(
-            this@AddNewStoryActivity,
-            CameraActivity::class.java
+            MediaStore.ACTION_IMAGE_CAPTURE
         )
-        launcherIntentCamera.launch(intent)
+        intent.resolveActivity(packageManager)
+
+        createCustomTempFile(application).also {
+            val photoUri: Uri = FileProvider.getUriForFile(
+                this@AddNewStoryActivity,
+                "com.dicoding.intermediete.submissionstoryapps",
+                it
+            )
+            currentPhotoPath = it.absolutePath
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+            launcherIntentCamera.launch(intent)
+        }
     }
 
     private fun startGallery() {
@@ -149,12 +158,11 @@ class AddNewStoryActivity : AppCompatActivity() {
         launcherIntentGallery.launch(chooser)
     }
 
-    private var getFile: File? = null
     private val launcherIntentCamera = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (it.resultCode == RESULT_OK) {
-            val myFile = it.data?.getSerializableExtra("picture") as File
+            val myFile = File(currentPhotoPath)
             val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
 
             getFile = myFile
@@ -164,10 +172,10 @@ class AddNewStoryActivity : AppCompatActivity() {
                     getFile?.path,
                 ), isBackCamera
             )
-            result.compress(
-                Bitmap.CompressFormat.JPEG,
-                compressQuality(myFile),
-                FileOutputStream(getFile))
+//            result.compress(
+//                Bitmap.CompressFormat.JPEG,
+//                compressQuality(myFile),
+//                FileOutputStream(getFile))
 
             binding.viewPreviewImage.setImageBitmap(result)
         }
@@ -189,7 +197,30 @@ class AddNewStoryActivity : AppCompatActivity() {
     }
 
     private fun uploadImage() {
-        when {
+        if (getFile != null) {
+            val file = compressPhoto(getFile as File)
+            val description = binding.edDescriptionImage.text
+                .toString()
+                .trim()
+                .toRequestBody("text/plain".toMediaType())
+            val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            val imageMultipartBody: MultipartBody.Part = MultipartBody.Part.createFormData(
+                "photo",
+                file.name,
+                requestImageFile
+            )
+
+            addNewStoryViewModel.uploadImage(imageMultipartBody, description, token)
+
+        } else {
+            Toast.makeText(
+                this@AddNewStoryActivity,
+                "Masukkan gambarnya dulu ya.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        /*when {
 
             getFile == null -> {
                 Toast.makeText(
@@ -205,7 +236,7 @@ class AddNewStoryActivity : AppCompatActivity() {
                     "Tulis deskripsinya dulu ya.",
                     Toast.LENGTH_SHORT
                 ).show()
-//                return
+                return
             }
 
             else -> {
@@ -221,7 +252,7 @@ class AddNewStoryActivity : AppCompatActivity() {
 
                 addNewStoryViewModel.uploadImage(imageMultiPart, description, token)
             }
-        }
+        }*/
     }
 
     override fun onRequestPermissionsResult(
@@ -244,6 +275,10 @@ class AddNewStoryActivity : AppCompatActivity() {
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun compressPhoto(file: File): File {
+        return file
     }
 
     private fun showLoading(isLoading: Boolean) {

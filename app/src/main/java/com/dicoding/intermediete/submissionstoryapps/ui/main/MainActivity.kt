@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -20,6 +21,7 @@ import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.ListStory
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityMainBinding
+import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryAdapter
 import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
@@ -36,9 +38,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mainViewModel: MainViewModel
 
-    private lateinit var rvStoryList: RecyclerView
+    private val storyListAdapter by lazy { StoryAdapter(storyList) }
 
     private val storyList = ArrayList<ListStory>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +51,6 @@ class MainActivity : AppCompatActivity() {
         setupViewModel()
         setupAction()
 
-        val intent = Link("")
-            .setOnClickListener {
-                startActivity(Intent(this, WelcomeActivity::class.java))
-            }
-        val testIntent = binding.testIntent
-        testIntent.applyLinks(intent)
     }
 
     private fun setupView() {
@@ -66,24 +63,17 @@ class MainActivity : AppCompatActivity() {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
-        supportActionBar?.hide()
+        supportActionBar?.title = "StoryKu"
 
-        rvStoryList = binding.rvStoryList
-        rvStoryList.setHasFixedSize(true)
-//        val layoutManager = LinearLayoutManager(this)
-//        binding.rvStoryList.layoutManager = layoutManager
-//        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
-//        binding.rvStoryList.addItemDecoration(itemDecoration)
+        val layoutManager = LinearLayoutManager(this)
+        binding.apply {
+            rvStoryList.layoutManager = layoutManager
+            rvStoryList.setHasFixedSize(true)
+            rvStoryList.adapter = storyListAdapter
+        }
     }
 
     private fun setupViewModel() {
-
-        val storyListAdapter = StoryAdapter(storyList)
-        rvStoryList.layoutManager = LinearLayoutManager(this@MainActivity)
-        rvStoryList.adapter = storyListAdapter
-//        binding.rvStoryList.adapter = storyListAdapter
-//        binding.rvStoryList.layoutManager = LinearLayoutManager(this)
-
         mainViewModel = ViewModelProvider(
             this@MainActivity,
             ViewModelFactory(UserPreference.getInstance(dataStore))
@@ -110,31 +100,20 @@ class MainActivity : AppCompatActivity() {
             showLoading(loader)
         }
 
-//        mainViewModel.errorMessage.observe(this@MainActivity) {
-//            when (it) {
-//                "Stories fetched successfully" -> {
-//                    Toast.makeText(this@MainActivity, getString(R.string.fetchedSuccess), Toast.LENGTH_SHORT).show()
-//                }
-//                "onFailure" -> {
-//                    Toast.makeText(this@MainActivity, getString(R.string.failureMessage), Toast.LENGTH_SHORT).show()
-//                }
-//                else -> {
-//                    Toast.makeText(this@MainActivity, getString(R.string.notFound), Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-
         mainViewModel.getUserToken().observe(
             this@MainActivity
         ) { state ->
+            Log.d("", "Successfully to get Token")
             if (state.login) {
                 mainViewModel.setUserData(state.token)
+                Log.e("getUserToken", "berhasil mengambil token")
             } else {
                 startActivity(
                     Intent(
                     this@MainActivity, WelcomeActivity::class.java
+                    )
                 )
-                )
+                Log.e("getUserToken", "gagal mengambil token")
                 finish()
             }
         }
@@ -160,8 +139,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.option_menu, menu)
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.option_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -169,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
 
             R.id.action_logout -> {
-                AlertDialog.Builder(
+                /*AlertDialog.Builder(
                     this@MainActivity).apply {
                         setTitle("")
                         setMessage("")
@@ -183,7 +163,12 @@ class MainActivity : AppCompatActivity() {
                         }
                     create()
                     show()
-                }
+                }*/
+                mainViewModel.userLogout()
+
+                val intent = Intent(this@MainActivity, LoginActivity::class.java)
+                startActivity(intent)
+                finish()
             }
         }
         return super.onOptionsItemSelected(item)

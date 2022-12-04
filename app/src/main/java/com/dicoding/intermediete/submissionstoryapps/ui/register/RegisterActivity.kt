@@ -77,22 +77,19 @@ class RegisterActivity : AppCompatActivity() {
             val email = binding.edRegisterEmail.text.toString()
             val password = binding.edRegisterPassword.text.toString()
             when {
-
                 name.isEmpty() -> {
                     binding.nameEditTextLayout.error = "Masukkan email"
                 }
-
                 email.isEmpty() -> {
                     binding.emailEditTextLayout.error = "Masukkan email"
                 }
-
                 password.isEmpty() -> {
                     binding.passwordEditTextLayout.error = "Masukkan password"
                 }
 
                 else -> {
-                    registerViewModel.register(RegisterResult(name, email, password))
-                    AlertDialog.Builder(this).apply {
+                    registerViewModel.register(name, email, password)
+                    AlertDialog.Builder(this@RegisterActivity).apply {
                         setTitle("Yes!")
                         setMessage("Akunnya sudah jadi nih. Yuk, login dan bagikan pengalamanmu!.")
                         setPositiveButton("Lanjut") { _, _ ->

@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResponse
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResult
 import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -24,30 +23,31 @@ class RegisterViewModel: ViewModel() {
     private var job: Job ?= null
 
 
-    fun register(user: RegisterResult) {
-        _isLoading.value = true
+    fun register(name: String, email: String, password: String) {
         job = CoroutineScope(Dispatchers.IO).launch {
-            val service = ApiConfig.getApiService().userRegister(user.name, user.email, user.password)
+//            _isLoading.value = true
+            val client = ApiConfig.getApiService().userRegister(name, email, password)
             withContext(Dispatchers.Main) {
-                service.enqueue(object : Callback<RegisterResponse> {
-
+                client.enqueue(object : Callback<RegisterResponse> {
                     override fun onResponse(
                         call: Call<RegisterResponse>,
                         response: Response<RegisterResponse>
                     ) {
-                        _isLoading.value = false
                         if (response.isSuccessful) {
-                            if (response.body() != null && response.body()!!.error) {
-                                Log.e(TAG, "onFailure: ${response.message()}")
+                            val responseBody = response.body()
+                            if (responseBody != null && !responseBody.error) {
+                                Log.e(TAG, "onSuccess: ${responseBody.message}")
+                            } else {
+                                Log.d("ERROR_REGISTER", "onFailure: ${responseBody!!.message}")
                             }
                         } else {
-                            Log.e(TAG, "onFailure: ${response.message()}")
+                            Log.d("ERROR_REGISTER", "onFailure: ${response.message()}")
                         }
                     }
 
                     override fun onFailure(call: Call<RegisterResponse>, t: Throwable) {
-                        _isLoading.value = false
-                        Log.e(TAG, "onFailure: ${t.message.toString()}")
+//                        _isLoading.value = false
+                        Log.e("ERROR_REGISTER", "onFailure: ${t.message.toString()}")
                     }
                 })
             }
@@ -58,5 +58,4 @@ class RegisterViewModel: ViewModel() {
         super.onCleared()
         job?.cancel()
     }
-
 }

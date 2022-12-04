@@ -21,44 +21,39 @@ class MainViewModel(private val pref: UserPreference): ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private val _storyList = MutableLiveData<List<ListStory>>()
-    val storyList: LiveData<List<ListStory>> = _storyList
+    val storyList = MutableLiveData<List<ListStory>>()
 
     private var job: Job ?= null
 
-//    val errorMessage = MutableLiveData<String>()
 
     fun getUserToken(): LiveData<User> {
         return pref.getUserToken().asLiveData()
     }
 
     fun setUserData(token: String) {
-        _isLoading.value = true
         job = CoroutineScope(Dispatchers.IO).launch {
-            val service = ApiConfig.getApiService().getStoryList("Authorization $token")
+            _isLoading.value = true
+            val client = ApiConfig.getApiService().getStoryList("Bearer $token")
             withContext(Dispatchers.Main) {
-                service.enqueue(object : Callback<GetAllStoryResponse> {
-
-                    override fun onResponse(
-                        call: Call<GetAllStoryResponse>,
-                        response: Response<GetAllStoryResponse>
-                    ) {
-                        _isLoading.value = false
+                client.enqueue(object : Callback<GetAllStoryResponse> {
+                    override fun onResponse(call: Call<GetAllStoryResponse>, response: Response<GetAllStoryResponse>) {
                         if (response.isSuccessful) {
-                            if (response.body() != null && response.body()!!.error) {
-                                _storyList.postValue(response.body()!!.listStory)
-                                Log.e(TAG, "onFailure: ${response.message()}")
+                            val responseBody = response.body()
+                            if (responseBody != null && !responseBody.error) {
+                                storyList.postValue(responseBody.listStory)
+                                Log.e(TAG, "onSuccess: ${responseBody.message}")
+                            } else {
+                                Log.d("ERROR", "onFailure: ${responseBody!!.message}")
                             }
                         } else {
-                            Log.e(TAG, "onFailure: ${response.message()}")
+                            Log.d("ERROR", "onFailure: ${response.message()}")
                         }
                     }
 
                     override fun onFailure(call: Call<GetAllStoryResponse>, t: Throwable) {
                         _isLoading.value = false
-                        Log.e(TAG, "onFailure: ${t.message.toString()}")
+                        Log.e("ERROR", "onFailure: ${t.message.toString()}")
                     }
-
                 })
             }
         }

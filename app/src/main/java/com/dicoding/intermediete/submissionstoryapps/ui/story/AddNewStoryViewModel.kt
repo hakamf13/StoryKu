@@ -25,8 +25,6 @@ class AddNewStoryViewModel(private val pref: UserPreference): ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private var job: Job? = null
-
 
     fun getUserToken(): LiveData<User> {
         return pref.getUserToken().asLiveData()
@@ -34,40 +32,27 @@ class AddNewStoryViewModel(private val pref: UserPreference): ViewModel() {
 
     fun uploadImage(file: MultipartBody.Part, description: RequestBody, token: String) {
         _isLoading.value = true
-        job = CoroutineScope(Dispatchers.IO).launch {
-            val service = ApiConfig.getApiService().getStory(
-                file,
-                description,
-                "Authorization $token"
-            )
-            withContext(Dispatchers.Main) {
-                service.enqueue(object : Callback<AddNewStoryResponse> {
-
-                    override fun onResponse(
-                        call: Call<AddNewStoryResponse>,
-                        response: Response<AddNewStoryResponse>
-                    ) {
-                        _isLoading.value = false
-                        if (response.isSuccessful) {
-                            if (response.body() != null && response.body()!!.error) {
-                               Log.e(TAG, "onFailure: ${response.message()}")
-                            }
-                        } else {
-                            Log.e(TAG, "onFailure: ${response.message()}")
-                        }
+        val client = ApiConfig.getApiService().getStory(file, description, "Bearer $token")
+        client.enqueue(object : Callback<AddNewStoryResponse> {
+            override fun onResponse(
+                call: Call<AddNewStoryResponse>,
+                response: Response<AddNewStoryResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody != null && !responseBody.error) {
+                        Log.e(TAG, "onSuccess GetStories: ${responseBody.message}")
+                    } else {
+                        Log.d("ERROR_ADD_STORIES", "onFailure: ${responseBody!!.message}")
                     }
-
-                    override fun onFailure(call: Call<AddNewStoryResponse>, t: Throwable) {
-                        _isLoading.value = false
-                        Log.e(TAG, "onFailure: ${t.message.toString()}")
-                    }
-                })
+                } else {
+                    Log.d("ERROR_ADD_STORIES", "onFailure: ${response.message()}")
+                }
             }
-        }
-    }
 
-    override fun onCleared() {
-        super.onCleared()
-        job?.cancel()
+            override fun onFailure(call: Call<AddNewStoryResponse>, t: Throwable) {
+                Log.e("ERROR_ADD_STORIES", "onFailure: ${t.message.toString()}")
+            }
+        })
     }
 }

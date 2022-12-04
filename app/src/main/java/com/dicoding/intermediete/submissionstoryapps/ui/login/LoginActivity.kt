@@ -73,17 +73,18 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.edLoginEmail.text.toString()
             val password = binding.edLoginPassword.text.toString()
             when {
-
                 email.isEmpty() -> {
                     binding.emailEditTextLayout.error = "Masukkan Email"
                 }
-
                 password.isEmpty() -> {
                     binding.passwordEditTextLayout.error = "Masukkan Password"
                 }
-
-//                email !=
-
+                email.isEmpty() -> {
+                    binding.edLoginEmail.setError("Masukkan Email", null)
+                }
+                password.isEmpty() -> {
+                    binding.edLoginPassword.setError("Masukkan Password", null)
+                }
                 else -> {
                     loginViewModel.login(email, password)
                     AlertDialog.Builder(
@@ -92,12 +93,12 @@ class LoginActivity : AppCompatActivity() {
                         setTitle("Yes!")
                         setMessage("Kamu berhasil masuk. Sudah tidak sabar untuk membagikan pengalamanmu ya?")
                         setPositiveButton("Lanjut") { _, _ ->
-                            val intentMain = Intent(
-                                context,
+                            val intent = Intent(
+                                this@LoginActivity,
                                 MainActivity::class.java
                             )
-                            intentMain.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intentMain)
+                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(intent)
                             finish()
                         }
                         create()

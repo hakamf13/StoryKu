@@ -51,14 +51,4 @@
         app:srcCompat="@drawable/ic_baseline_add_photo_alternate_24"
         app:tint="@null"/>
 
-    <Button
-        android:id="@+id/testIntent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Test Intent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

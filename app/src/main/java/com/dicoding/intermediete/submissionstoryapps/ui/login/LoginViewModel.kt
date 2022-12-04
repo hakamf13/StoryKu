@@ -28,28 +28,27 @@ class LoginViewModel(private val pref: UserPreference): ViewModel() {
     fun login(email: String, password: String) {
         _isLoading.value = true
         job = CoroutineScope(Dispatchers.IO).launch {
-            val service = ApiConfig.getApiService().userLogin(email, password)
+            val client = ApiConfig.getApiService().userLogin(email, password)
             withContext(Dispatchers.Main) {
-                service.enqueue(object : Callback<LoginResponse> {
-
-                    override fun onResponse(
-                        call: Call<LoginResponse>,
-                        response: Response<LoginResponse>
-                    ) {
-                        _isLoading.value = false
+                client.enqueue(object : Callback<LoginResponse> {
+                    override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                         if (response.isSuccessful) {
-                            if (response.body() != null && response.body()!!.error) {
-                                saveUserToken(response.body()!!.loginResult.token)
-                                Log.e(TAG, "onFailure: ${response.message()}")
+                            val responseBody = response.body()
+                            if (responseBody != null && !responseBody.error) {
+                                saveUserToken(responseBody.loginResult.token)
+                                Log.e(TAG, "onSuccess: ${responseBody.message}")
+                            } else {
+                                saveUserToken(responseBody!!.loginResult.token)
+                                Log.d("ERROR_LOGIN", "onFailure: ${responseBody.message}")
                             }
                         } else {
-                            Log.e(TAG, "onFailure: ${response.message()}")
+                            Log.d("ERROR_LOGIN", "onFailure: ${response.message()}")
                         }
                     }
 
                     override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                         _isLoading.value = false
-                        Log.e(TAG, "onFailure: ${t.message.toString()}")
+                        Log.e("ERROR_LOGIN", "onFailure: ${t.message.toString()}")
                     }
                 })
             }

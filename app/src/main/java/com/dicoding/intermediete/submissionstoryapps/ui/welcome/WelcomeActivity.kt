@@ -12,6 +12,10 @@ import android.view.WindowManager
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityWelcomeBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.register.RegisterActivity
+import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
+import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryDetailActivity
+import com.klinker.android.link_builder.Link
+import com.klinker.android.link_builder.applyLinks
 
 class WelcomeActivity : AppCompatActivity() {
 

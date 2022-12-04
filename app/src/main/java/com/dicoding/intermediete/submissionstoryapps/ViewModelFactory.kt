@@ -6,6 +6,7 @@ import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginViewModel
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainViewModel
 import com.dicoding.intermediete.submissionstoryapps.ui.register.RegisterViewModel
+import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryViewModel
 
 class ViewModelFactory(private val pref: UserPreference): ViewModelProvider.NewInstanceFactory() {
 
@@ -23,6 +24,10 @@ class ViewModelFactory(private val pref: UserPreference): ViewModelProvider.NewI
 
             modelClass.isAssignableFrom(RegisterViewModel::class.java) -> {
                 RegisterViewModel() as T
+            }
+
+            modelClass.isAssignableFrom(AddNewStoryViewModel::class.java) -> {
+                AddNewStoryViewModel(pref) as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)
