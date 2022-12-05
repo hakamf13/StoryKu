@@ -88,7 +88,7 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 else -> {
-                    registerViewModel.register(name, email, password)
+                    registerViewModel.register(RegisterResult(name, email, password))
                     AlertDialog.Builder(this@RegisterActivity).apply {
                         setTitle("Yes!")
                         setMessage("Akunnya sudah jadi nih. Yuk, login dan bagikan pengalamanmu!.")
@@ -121,6 +121,7 @@ class RegisterActivity : AppCompatActivity() {
             playSequentially(title, nameEdit, emailEdit, passEdit, register)
             start()
         }
+
     }
 
     private fun showLoading(isLoading: Boolean) {

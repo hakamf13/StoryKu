@@ -1,8 +1,7 @@
 package com.dicoding.intermediete.submissionstoryapps.data.remote.response
 
-import android.os.Parcelable
+import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.google.gson.annotations.SerializedName
-import kotlinx.parcelize.Parcelize
 
 data class GetAllStoryResponse(
 
@@ -13,26 +12,6 @@ data class GetAllStoryResponse(
     val message: String,
 
     @field:SerializedName("listStory")
-    val listStory: List<ListStory>
+    val listStory: MutableList<StoryModel>
 
 )
-
-@Parcelize
-data class ListStory(
-
-    @field:SerializedName("id")
-    val id: String,
-
-    @field:SerializedName("name")
-    val name: String,
-
-    @field:SerializedName("description")
-    val description: String,
-
-    @field:SerializedName("photoUrl")
-    val photoUrl: String,
-
-    @field:SerializedName("createdAt")
-    val createdAt: String,
-
-) : Parcelable

@@ -16,6 +16,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
+import com.dicoding.intermediete.submissionstoryapps.data.local.UserModel
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityLoginBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
@@ -29,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private lateinit var loginViewModel: LoginViewModel
+
+    private lateinit var user: UserModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +64,12 @@ class LoginActivity : AppCompatActivity() {
             ViewModelFactory(UserPreference.getInstance(dataStore))
         )[LoginViewModel::class.java]
 
+        loginViewModel.getUserToken().observe(
+            this@LoginActivity
+        ) {
+            this.user = it
+        }
+
         loginViewModel.isLoading.observe(
             this@LoginActivity
         ) { loader ->
@@ -73,18 +82,15 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.edLoginEmail.text.toString()
             val password = binding.edLoginPassword.text.toString()
             when {
+
                 email.isEmpty() -> {
                     binding.emailEditTextLayout.error = "Masukkan Email"
                 }
+
                 password.isEmpty() -> {
                     binding.passwordEditTextLayout.error = "Masukkan Password"
                 }
-                email.isEmpty() -> {
-                    binding.edLoginEmail.setError("Masukkan Email", null)
-                }
-                password.isEmpty() -> {
-                    binding.edLoginPassword.setError("Masukkan Password", null)
-                }
+
                 else -> {
                     loginViewModel.login(email, password)
                     AlertDialog.Builder(
@@ -110,6 +116,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupAnimation() {
+
         ObjectAnimator.ofFloat(binding.imageViewLogin, View.TRANSLATION_X, -30F, 30F).apply {
             duration = 6000
             repeatCount = ObjectAnimator.INFINITE
@@ -128,6 +135,7 @@ class LoginActivity : AppCompatActivity() {
             playSequentially(title, message, emailText, emailEdit, passText, passEdit, login)
             start()
         }
+
     }
 
     private fun showLoading(isLoading: Boolean) {

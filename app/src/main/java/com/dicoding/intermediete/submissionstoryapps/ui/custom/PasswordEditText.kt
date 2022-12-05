@@ -23,6 +23,7 @@ class PasswordEditText: AppCompatEditText {
         init()
     }
 
+
     private fun init() {
         addTextChangedListener(object : TextWatcher {
 
@@ -36,7 +37,7 @@ class PasswordEditText: AppCompatEditText {
 
             override fun afterTextChanged(s: Editable) {
                 if (s.length < 6) {
-                    error = "Minimal 6 karakter!"
+                    error = "Min. 6 Characters!"
                 }
             }
         })

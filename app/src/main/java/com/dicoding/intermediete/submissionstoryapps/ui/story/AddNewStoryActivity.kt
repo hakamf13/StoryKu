@@ -10,11 +10,13 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -24,13 +26,20 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.intermediete.submissionstoryapps.*
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
+import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
+import com.dicoding.intermediete.submissionstoryapps.data.remote.response.AddNewStoryResponse
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityAddNewStoryBinding
+import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
+import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity.Companion.STORY_UPLOADED
 import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 
 @Suppress("DEPRECATION")
@@ -49,7 +58,7 @@ class AddNewStoryActivity : AppCompatActivity() {
     }
 
     private lateinit var addNewStoryViewModel: AddNewStoryViewModel
-    private lateinit var token: String
+
     private lateinit var currentPhotoPath: String
 
     private var getFile: File? = null
@@ -93,9 +102,9 @@ class AddNewStoryActivity : AppCompatActivity() {
 
         addNewStoryViewModel.getUserToken().observe(
             this@AddNewStoryActivity
-        ) { state ->
-            if (state.login) {
-                this.token = state.token
+        ) { session ->
+            if (session.isLogin) {
+                Log.d("TOKEN", "Token has been found")
             } else {
                 startActivity(Intent(
                     this@AddNewStoryActivity,
@@ -164,19 +173,12 @@ class AddNewStoryActivity : AppCompatActivity() {
         if (it.resultCode == RESULT_OK) {
             val myFile = File(currentPhotoPath)
             val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
-
             getFile = myFile
-
             val result = rotateBitmap(
                 BitmapFactory.decodeFile(
                     getFile?.path,
                 ), isBackCamera
             )
-//            result.compress(
-//                Bitmap.CompressFormat.JPEG,
-//                compressQuality(myFile),
-//                FileOutputStream(getFile))
-
             binding.viewPreviewImage.setImageBitmap(result)
         }
     }
@@ -198,61 +200,73 @@ class AddNewStoryActivity : AppCompatActivity() {
 
     private fun uploadImage() {
         if (getFile != null) {
-            val file = compressPhoto(getFile as File)
-            val description = binding.edDescriptionImage.text
-                .toString()
-                .trim()
-                .toRequestBody("text/plain".toMediaType())
-            val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            val imageMultipartBody: MultipartBody.Part = MultipartBody.Part.createFormData(
-                "photo",
-                file.name,
-                requestImageFile
-            )
 
-            addNewStoryViewModel.uploadImage(imageMultipartBody, description, token)
+            addNewStoryViewModel.getUserToken().observe(
+                this@AddNewStoryActivity
+            ) {
+                if (it.isLogin) {
+                    val token = "Bearer ${it.token}"
+                    val file = compressPhoto(getFile as File)
+                    val description = binding.edDescriptionImage.text
+                        .toString()
+                        .trim()
+                        .toRequestBody("text/plain".toMediaType())
+                    val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    val imageMultipartBody: MultipartBody.Part = MultipartBody.Part.createFormData(
+                        "photo",
+                        file.name,
+                        requestImageFile
+                    )
+                    val client = ApiConfig.getApiService().getStory(token, imageMultipartBody, description)
+                    client.enqueue(object : Callback<AddNewStoryResponse> {
+
+                        override fun onResponse(
+                            call: Call<AddNewStoryResponse>,
+                            response: Response<AddNewStoryResponse>
+                        ) {
+                            if (response.isSuccessful) {
+                                val responseBody = response.body()!!
+                                if (!responseBody.error) {
+                                    Log.d("STORY", "Story has been fetched")
+                                    AlertDialog.Builder(
+                                        this@AddNewStoryActivity
+                                    ).apply {
+                                        setTitle("Yes!")
+                                        setMessage("Story berhasil di-upload")
+                                        setPositiveButton("Lanjut") { _, _ ->
+                                            val intent = Intent(
+                                                this@AddNewStoryActivity,
+                                                MainActivity::class.java
+                                            )
+                                            intent.putExtra(STORY_UPLOADED, true)
+                                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            startActivity(intent)
+                                            finish()
+                                        }
+                                    }
+                                } else {
+                                    Log.e("STORY_ERROR", "Story not fetch yet")
+                                }
+                            } else {
+                                Log.e("STORY_ERROR", "Story not fetch yet")
+                            }
+                        }
+
+                        override fun onFailure(call: Call<AddNewStoryResponse>, t: Throwable) {
+                            Log.e("STORY_ERROR", "Story not fetch yet")
+                        }
+
+                    })
+                }
+            }
 
         } else {
             Toast.makeText(
                 this@AddNewStoryActivity,
-                "Masukkan gambarnya dulu ya.",
+                "Masukkan gambar dan deskripsinya dulu ya!",
                 Toast.LENGTH_SHORT
             ).show()
         }
-
-        /*when {
-
-            getFile == null -> {
-                Toast.makeText(
-                    this@AddNewStoryActivity,
-                    "Masukkan gambarnya dulu ya.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            binding.edDescriptionImage.text?.isNotEmpty() == false -> {
-                Toast.makeText(
-                    this@AddNewStoryActivity,
-                    "Tulis deskripsinya dulu ya.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-
-            else -> {
-                binding.progressBar.visibility = View.VISIBLE
-                val file = getFile as File
-                val description = binding.edDescriptionImage.text.toString().toRequestBody("text/plain".toMediaType())
-                val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val imageMultiPart: MultipartBody.Part = MultipartBody.Part.createFormData(
-                    "photo",
-                    file.name,
-                    requestImageFile
-                )
-
-                addNewStoryViewModel.uploadImage(imageMultiPart, description, token)
-            }
-        }*/
     }
 
     override fun onRequestPermissionsResult(

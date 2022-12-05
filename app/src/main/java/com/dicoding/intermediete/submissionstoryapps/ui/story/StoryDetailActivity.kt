@@ -6,14 +6,14 @@ import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowManager
 import com.bumptech.glide.Glide
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.ListStory
+import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityStoryDetailBinding
 
 @Suppress("DEPRECATION")
 class StoryDetailActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_DETAIL = "extra_detail"
+        const val EXTRAS_STORY = "extras_story"
     }
 
     private val binding: ActivityStoryDetailBinding by lazy {
@@ -29,7 +29,6 @@ class StoryDetailActivity : AppCompatActivity() {
     }
 
     private fun setupView() {
-        @Suppress("DEPRECATION")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.hide(WindowInsets.Type.statusBars())
         } else {
@@ -38,18 +37,18 @@ class StoryDetailActivity : AppCompatActivity() {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
-//        supportActionBar?.hide()
+        supportActionBar?.hide()
     }
 
     private fun setupObserver() {
-        val story = intent.getParcelableExtra<ListStory>(EXTRA_DETAIL) as ListStory
+        val story = intent?.extras?.getParcelable<StoryModel>(EXTRAS_STORY)
         Glide.with(applicationContext)
-            .load(story.photoUrl)
+            .load(story?.photoUrl)
             .into(binding.imageItemStory)
         binding.apply {
-            tvItemName.text = story.name
-            tvItemDescription.text = story.description
-            tvItemDate.text = story.createdAt
+            tvItemName.text = story?.name
+            tvItemDescription.text = story?.description
+            tvItemDate.text = story?.createdAt
         }
     }
 }

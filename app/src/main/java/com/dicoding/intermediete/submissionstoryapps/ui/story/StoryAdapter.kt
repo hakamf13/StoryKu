@@ -1,30 +1,21 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.story
 
-import android.app.Activity
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.ListStory
+import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.dicoding.intermediete.submissionstoryapps.databinding.StoryListItemBinding
 
-class StoryAdapter(private val storyList: ArrayList<ListStory>)
-    : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
+class StoryAdapter : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
 
-    companion object {
-        const val EXTRA_STORY = "extra_story"
-    }
+    private var onItemClickCallback: OnItemClickCallback? = null
 
-    private lateinit var onItemClickCallback: OnItemClickCallback
+    var storyList = mutableListOf<StoryModel>()
 
-    inner class ListViewHolder(private var binding: StoryListItemBinding): RecyclerView.ViewHolder(binding.root) {
-
-//        private var photo = binding.imageItemStory
-//        private var
-
-        fun bind(story: ListStory) {
+    class ListViewHolder(private val binding: StoryListItemBinding)
+        : RecyclerView.ViewHolder(binding.root) {
+        fun bind(story: StoryModel) {
             Glide.with(itemView.context)
                 .load(story.photoUrl)
                 .into(binding.imageItemStory)
@@ -32,13 +23,6 @@ class StoryAdapter(private val storyList: ArrayList<ListStory>)
                 tvItemName.text = story.name
                 tvItemDate.text = story.createdAt
                 tvItemDescription.text = story.description
-            }
-            itemView.setOnClickListener {
-                val intent = Intent(itemView.context, StoryDetailActivity::class.java)
-                intent.putExtra(EXTRA_STORY, story)
-                itemView.context.startActivity(
-                    intent,
-                    ActivityOptionsCompat.makeSceneTransitionAnimation(itemView.context as Activity).toBundle())
             }
         }
     }
@@ -50,23 +34,20 @@ class StoryAdapter(private val storyList: ArrayList<ListStory>)
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        val storyData = storyList[position]
-        if (storyData != null) {
-            holder.bind(storyData)
-            holder.itemView.setOnClickListener {
-                onItemClickCallback.onItemClicked(storyData)
-            }
+        holder.bind(storyList[position])
+        holder.itemView.setOnClickListener {
+            onItemClickCallback!!.onItemClicked(storyList[position])
         }
     }
 
     override fun getItemCount(): Int = storyList.size
 
-//    fun setOnItemClickCallback(onItemClickCallback: OnItemClickCallback) {
-//        this.onItemClickCallback = onItemClickCallback
-//    }
+    fun setOnItemClickCallback(onItemClickCallback: OnItemClickCallback) {
+        this.onItemClickCallback = onItemClickCallback
+    }
 
     interface OnItemClickCallback {
-        fun onItemClicked(data: ListStory)
+        fun onItemClicked(data: StoryModel)
     }
 
 }
