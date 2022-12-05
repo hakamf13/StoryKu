@@ -29,7 +29,7 @@ interface ApiService {
     @Multipart
     @POST("v1/stories")
     fun getStory(
-        @Header("Authorization") token: String,
+        @Header("Authorization") Bearer: String,
         @Part file: MultipartBody.Part,
         @Part("description") description: RequestBody
     ): Call<AddNewStoryResponse>

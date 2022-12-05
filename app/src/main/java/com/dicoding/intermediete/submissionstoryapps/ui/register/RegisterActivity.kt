@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -16,8 +17,12 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
 import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResult
+import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
+import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResponse
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityRegisterBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -88,16 +93,39 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 else -> {
-                    registerViewModel.register(RegisterResult(name, email, password))
-                    AlertDialog.Builder(this@RegisterActivity).apply {
-                        setTitle("Yes!")
-                        setMessage("Akunnya sudah jadi nih. Yuk, login dan bagikan pengalamanmu!.")
-                        setPositiveButton("Lanjut") { _, _ ->
-                            finish()
+                    val client = ApiConfig.getApiService().postRegister(name, email, password)
+                    client.enqueue(object : Callback<RegisterResponse> {
+
+                        override fun onResponse(
+                            call: Call<RegisterResponse>,
+                            response: Response<RegisterResponse>
+                        ) {
+                            if (response.isSuccessful) {
+                                val responseBody = response.body()!!
+                                if (!responseBody.error) {
+                                    Log.d("REGISTER", "Register success")
+                                    AlertDialog.Builder(this@RegisterActivity).apply {
+                                        setTitle("Yes!")
+                                        setMessage("Akunnya sudah jadi nih. Yuk, login dan bagikan pengalamanmu!.")
+                                        setPositiveButton("Lanjut") { _, _ ->
+                                            finish()
+                                        }
+                                        create()
+                                        show()
+                                    }
+                                } else {
+                                    Log.e("REGISTER_ERROR", "errorRegister: ${responseBody.registerResult}")
+                                }
+                            } else {
+                                Log.e("REGISTER_ERROR", "registerError: ${response.message()}")
+                            }
                         }
-                        create()
-                        show()
-                    }
+
+                        override fun onFailure(call: Call<RegisterResponse>, t: Throwable) {
+                            Log.e("REGISTER_ERROR", "registerError: ${t.message.toString()}")
+                        }
+
+                    })
                 }
             }
         }
