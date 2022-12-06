@@ -206,7 +206,7 @@ class AddNewStoryActivity : AppCompatActivity() {
             ) {
                 if (it.isLogin) {
                     val token = "Bearer ${it.token}"
-                    val file = compressPhoto(getFile as File)
+                    val file = reduceFileImage(getFile as File)
                     val description = binding.edDescriptionImage.text
                         .toString()
                         .trim()
@@ -289,10 +289,6 @@ class AddNewStoryActivity : AppCompatActivity() {
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun compressPhoto(file: File): File {
-        return file
     }
 
     private fun showLoading(isLoading: Boolean) {

@@ -64,7 +64,7 @@ fun rotateBitmap(bitmap: Bitmap, isBackCamera: Boolean = false): Bitmap {
     }
 }
 
-fun compressQuality(file: File): File {
+fun reduceFileImage(file: File): File {
     val bitmap = BitmapFactory.decodeFile(file.path)
     var compressQuality = 100
     var streamLength: Int
