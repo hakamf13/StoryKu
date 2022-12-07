@@ -12,6 +12,6 @@ data class GetAllStoryResponse(
     val message: String,
 
     @field:SerializedName("listStory")
-    val listStory: MutableList<StoryModel>
+    val listStory: List<StoryModel>?
 
 )

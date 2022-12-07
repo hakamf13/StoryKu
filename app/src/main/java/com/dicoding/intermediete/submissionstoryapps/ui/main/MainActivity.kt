@@ -1,33 +1,18 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.main
 
-import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.*
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dicoding.intermediete.submissionstoryapps.R
-import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
-import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
-import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.GetAllStoryResponse
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityMainBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryAdapter
-import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryDetailActivity
-import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryDetailActivity.Companion.EXTRAS_STORY
-import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.dicoding.intermediete.submissionstoryapps.utils.ViewModelFactory
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,13 +20,13 @@ class MainActivity : AppCompatActivity() {
         const val STORY_UPLOADED = "Story has been uploaded"
     }
 
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
-
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private lateinit var mainViewModel: MainViewModel
+    private val mainViewModel: MainViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
 
     private lateinit var storyAdapter: StoryAdapter
 
@@ -51,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupView()
-        setupViewModel()
         setupAction()
         setupObserver()
 
@@ -91,38 +75,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun setupViewModel() {
-
-        mainViewModel = ViewModelProvider(
-            this@MainActivity,
-            ViewModelFactory(UserPreference.getInstance(dataStore))
-        )[MainViewModel::class.java]
-
-        mainViewModel.getUserToken().observe(
-            this@MainActivity
-        ) { session ->
-            Log.d("", "Successfully to get Token")
-            if (session.isLogin) {
-                Log.d("TRUE", "Token has been found")
-            } else {
-                Log.e("FALSE", "Token not found")
-                startActivity(
-                    Intent(
-                        this@MainActivity, WelcomeActivity::class.java
-                    )
-                )
-                finish()
-            }
-        }
-
-        mainViewModel.isLoading.observe(
-            this@MainActivity
-        ) { loader ->
-            showLoading(loader)
-        }
-
-    }
-
     private fun setupAction() {
 
         binding.swipeRefresh.setOnRefreshListener {
@@ -144,34 +96,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObserver() {
-        mainViewModel.getUserToken().observe(
-            this@MainActivity
-        ) {
-            val token = "Bearer ${it.token}"
-            val client = ApiConfig.getApiService().getStoryList(token)
-            client.enqueue(object : Callback<GetAllStoryResponse> {
 
-                override fun onResponse(
-                    call: Call<GetAllStoryResponse>,
-                    response: Response<GetAllStoryResponse>
-                ) {
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()!!
-                        if (!responseBody.error) {
-                            storyAdapter.storyList = responseBody.listStory
-                            binding.rvStoryList.adapter = storyAdapter
-                            Log.d("STORY", "Story has been fetched")
-                        } else {
-                            Log.e("STORY", "Story has not fetch")
-                        }
-                    }
-                }
-
-                override fun onFailure(call: Call<GetAllStoryResponse>, t: Throwable) {
-                    Log.e("STORY", "Story has not fetch")
-                }
-            })
+        mainViewModel.getUserToken().observe(this@MainActivity) { session ->
+            if (session.isLogin) {
+                getStoryList(session.token)
+            } else {
+                val intent = Intent(
+                    this@MainActivity,
+                    LoginActivity::class.java
+                )
+                startActivity(intent)
+                finish()
+            }
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -185,7 +123,10 @@ class MainActivity : AppCompatActivity() {
             R.id.action_logout -> {
                 mainViewModel.userLogout()
 
-                val intent = Intent(this@MainActivity, LoginActivity::class.java)
+                val intent = Intent(
+                    this@MainActivity,
+                    LoginActivity::class.java
+                )
                 startActivity(intent)
                 finish()
             }
@@ -193,7 +134,17 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    private fun getStoryList(token: String) {
+        showLoading(true)
+        mainViewModel.getStories(token).observe(this@MainActivity) {
+            showLoading(false)
+            storyAdapter.storyList
+            binding.rvStoryList.adapter = storyAdapter
+        }
+    }
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
+
 }

@@ -13,7 +13,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import com.dicoding.intermediete.submissionstoryapps.createFile
+import com.dicoding.intermediete.submissionstoryapps.utils.createFile
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityCameraBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
 

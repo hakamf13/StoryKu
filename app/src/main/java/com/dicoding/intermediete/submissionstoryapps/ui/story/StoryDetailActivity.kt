@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowManager
 import com.bumptech.glide.Glide
-import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityStoryDetailBinding
 
 @Suppress("DEPRECATION")

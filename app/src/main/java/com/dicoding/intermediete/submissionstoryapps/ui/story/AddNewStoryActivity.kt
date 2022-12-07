@@ -32,6 +32,7 @@ import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityAddNewS
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity.Companion.STORY_UPLOADED
 import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
+import com.dicoding.intermediete.submissionstoryapps.utils.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody

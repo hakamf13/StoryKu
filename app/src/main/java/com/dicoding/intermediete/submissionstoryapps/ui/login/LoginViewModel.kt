@@ -1,30 +1,18 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.login
 
 import androidx.lifecycle.*
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserModel
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
 import com.dicoding.intermediete.submissionstoryapps.data.remote.response.LoginResult
+import com.dicoding.intermediete.submissionstoryapps.data.repository.StoryRepository
 import kotlinx.coroutines.*
 
-class LoginViewModel(private val pref: UserPreference): ViewModel() {
+class LoginViewModel(private val storyRepository: StoryRepository): ViewModel() {
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-
-    fun getUserToken(): LiveData<UserModel> {
-        return pref.getUserToken().asLiveData()
-    }
-
-    fun userLogin() {
-        viewModelScope.launch {
-            pref.userLogin()
-        }
-    }
+    fun postLogin(email: String, password: String) =
+        storyRepository.postLogin(email, password)
 
     fun userSave(user: LoginResult) {
         viewModelScope.launch {
-            pref.userSave(user)
+            storyRepository.userSave(user)
         }
     }
 }

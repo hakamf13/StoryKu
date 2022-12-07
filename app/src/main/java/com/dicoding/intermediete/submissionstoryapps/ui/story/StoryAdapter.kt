@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.dicoding.intermediete.submissionstoryapps.databinding.StoryListItemBinding
 
 class StoryAdapter : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
