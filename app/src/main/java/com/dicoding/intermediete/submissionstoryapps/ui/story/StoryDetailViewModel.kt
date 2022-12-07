@@ -5,8 +5,6 @@ import com.dicoding.intermediete.submissionstoryapps.data.repository.StoryReposi
 
 class StoryDetailViewModel(private val storyRepository: StoryRepository): ViewModel() {
 
-    fun getDetailStories(id: String) {
-        storyRepository.getDetailStories(id)
-    }
+    fun getDetailStories(id: String) = storyRepository.getDetailStories(id)
 
 }

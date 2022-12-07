@@ -9,11 +9,7 @@ import kotlinx.coroutines.*
 
 class MainViewModel(private val storyRepository: StoryRepository): ViewModel() {
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-
-    fun getUserToken() = storyRepository.getUserToken()
+    fun getUserToken() = storyRepository.getUserToken().asLiveData()
 
     fun userLogout() {
         viewModelScope.launch {

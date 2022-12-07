@@ -14,7 +14,7 @@ interface StoryDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addStories(stories: List<StoryModel>)
 
-    @Query("SELECT * FROM story ORDER BY createdAt DESC")
+    @Query("SELECT * FROM story")
     fun getStories(): PagingSource<Int, StoryModel>
 
     @Query("SELECT * FROM story WHERE id = :id LIMIT 1")

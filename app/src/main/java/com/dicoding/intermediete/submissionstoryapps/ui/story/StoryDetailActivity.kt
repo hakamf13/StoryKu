@@ -5,8 +5,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.activity.viewModels
 import com.bumptech.glide.Glide
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityStoryDetailBinding
+import com.dicoding.intermediete.submissionstoryapps.utils.ViewModelFactory
+import com.dicoding.intermediete.submissionstoryapps.utils.Result
 
 @Suppress("DEPRECATION")
 class StoryDetailActivity : AppCompatActivity() {
@@ -19,12 +23,19 @@ class StoryDetailActivity : AppCompatActivity() {
         ActivityStoryDetailBinding.inflate(layoutInflater)
     }
 
+    private val storyDetailViewModel: StoryDetailViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
+
+    val story = intent.getStringExtra(EXTRAS_STORY).toString()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         setupView()
-        setupObserver()
+        setupAction(story)
     }
 
     private fun setupView() {
@@ -39,15 +50,38 @@ class StoryDetailActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    private fun setupObserver() {
-        val story = intent?.extras?.getParcelable<StoryModel>(EXTRAS_STORY)
-        Glide.with(applicationContext)
-            .load(story?.photoUrl)
-            .into(binding.imageItemStory)
-        binding.apply {
-            tvItemName.text = story?.name
-            tvItemDescription.text = story?.description
-            tvItemDate.text = story?.createdAt
+    private fun setupAction(id: String) {
+        storyDetailViewModel.getDetailStories(id).observe(
+            this@StoryDetailActivity
+        ) {
+            if (it != null) {
+                when (it) {
+
+                    is Result.Loading -> {
+
+                    }
+
+                    is Result.Success -> {
+                        Glide.with(applicationContext)
+                            .load(it.data.photoUrl)
+                            .into(binding.imageItemStory)
+                        binding.apply {
+                            tvItemName.text = it.data.name
+                            tvItemDescription.text = it.data.description
+                            tvItemDate.text = it.data.createdAt
+                        }
+                    }
+
+                    is Result.Error -> {
+                        Toast.makeText(
+                            this@StoryDetailActivity,
+                            it.error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                }
+            }
         }
     }
 }

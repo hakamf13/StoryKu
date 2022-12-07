@@ -29,7 +29,6 @@ class StoryRepository private constructor(
         @Volatile
         private var INSTANCE: StoryRepository? = null
 
-        @JvmStatic
         fun getInstance(
             apiService: ApiService,
             storyDao: StoryDao,
@@ -51,9 +50,8 @@ class StoryRepository private constructor(
 
     private val loginResult = MediatorLiveData<Result<LoginResult>>()
     private val registerResult = MediatorLiveData<Result<RegisterResponse>>()
-//    private val uploadResult = MediatorLiveData<Result<GetAllStoryResponse>>()
+    private val uploadResult = MediatorLiveData<Result<AddNewStoryResponse>>()
     private val storiesWithLocation = MediatorLiveData<Result<List<StoryModel>>>()
-//    private val detailStories = MediatorLiveData<Result<List<StoryModel>>>()
 
 
     fun getStories(token: String): LiveData<PagingData<StoryModel>> {
@@ -178,24 +176,43 @@ class StoryRepository private constructor(
         }
     }
 
-    fun uploadImage(
+    fun uploadImageStory(
         token: String,
         imageMultipartBody: MultipartBody.Part,
         description: RequestBody,
-        lat: Double?,
-        lon: Double?
-    ): LiveData<Result<AddNewStoryResponse>> = liveData {
-        emit(Result.Loading)
-        try {
-            val client = apiService.getStory("Bearer $token", imageMultipartBody, description, lat, lon)
-            emit(Result.Success(client))
-        } catch (e: Exception) {
-            emit(Result.Error(e.message.toString()))
-        }
+        lat: RequestBody?,
+        lon: RequestBody?
+    ): LiveData<Result<AddNewStoryResponse>> {
+        uploadResult.value = Result.Loading
+        val client = apiService.postStory("Bearer $token", imageMultipartBody, description, lat, lon)
+        client.enqueue(object : Callback<AddNewStoryResponse> {
+
+            override fun onResponse(
+                call: Call<AddNewStoryResponse>,
+                response: Response<AddNewStoryResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body()!!
+                    if (!responseBody.error) {
+                        uploadResult.value = Result.Success(responseBody)
+                    } else {
+                        uploadResult.value = Result.Error(responseBody.message)
+                    }
+                } else {
+                    uploadResult.value = Result.Error(response.message())
+                }
+            }
+
+            override fun onFailure(call: Call<AddNewStoryResponse>, t: Throwable) {
+                uploadResult.value = Result.Error(t.message.toString())
+            }
+
+        })
+
+        return uploadResult
     }
 
-    fun getUserToken() =
-        userPreference.getUserToken().asLiveData()
+    fun getUserToken() = userPreference.getUserToken()
 
     suspend fun userSave(user: LoginResult) {
         userPreference.userSave(user)

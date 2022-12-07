@@ -12,13 +12,10 @@ import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityMainBin
 import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryAdapter
+import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
 import com.dicoding.intermediete.submissionstoryapps.utils.ViewModelFactory
 
 class MainActivity : AppCompatActivity() {
-
-    companion object {
-        const val STORY_UPLOADED = "Story has been uploaded"
-    }
 
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -28,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(this)
     }
 
-    private lateinit var storyAdapter: StoryAdapter
+    private val storyAdapter = StoryAdapter()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,22 +54,8 @@ class MainActivity : AppCompatActivity() {
         binding.apply {
             rvStoryList.layoutManager = layoutManager
             rvStoryList.setHasFixedSize(true)
+            rvStoryList.adapter = storyAdapter
         }
-
-        storyAdapter = StoryAdapter().apply {
-            setOnItemClickCallback(object : StoryAdapter.OnItemClickCallback {
-                override fun onItemClicked(data: StoryModel) {
-                    Intent(
-                        this@MainActivity,
-                        StoryDetailActivity::class.java
-                    ).also {
-                        it.putExtra(EXTRAS_STORY, data)
-                        startActivity(it)
-                    }
-                }
-            })
-        }
-
     }
 
     private fun setupAction() {
@@ -97,16 +80,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObserver() {
 
-        mainViewModel.getUserToken().observe(this@MainActivity) { session ->
-            if (session.isLogin) {
-                getStoryList(session.token)
-            } else {
+        mainViewModel.getUserToken().observe(
+            this@MainActivity
+        ) { session ->
+            if (session.token == "") {
                 val intent = Intent(
                     this@MainActivity,
-                    LoginActivity::class.java
+                    WelcomeActivity::class.java
                 )
                 startActivity(intent)
                 finish()
+            } else {
+                getStoryList(session.token)
             }
         }
 
@@ -136,10 +121,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun getStoryList(token: String) {
         showLoading(true)
-        mainViewModel.getStories(token).observe(this@MainActivity) {
+        mainViewModel.getStories(token).observe(
+            this@MainActivity
+        ) {
             showLoading(false)
-            storyAdapter.storyList
-            binding.rvStoryList.adapter = storyAdapter
+            storyAdapter.submitData(lifecycle, it)
         }
     }
 

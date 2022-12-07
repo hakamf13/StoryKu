@@ -1,16 +1,34 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.story
 
+import android.app.Activity
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.app.ActivityOptionsCompat
+import androidx.paging.PagingDataAdapter
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.dicoding.intermediete.submissionstoryapps.data.local.StoryModel
 import com.dicoding.intermediete.submissionstoryapps.databinding.StoryListItemBinding
+import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryDetailActivity.Companion.EXTRAS_STORY
 
-class StoryAdapter : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
+class StoryAdapter : PagingDataAdapter<StoryModel, StoryAdapter.ListViewHolder>(DIFF_CALLBACK) {
 
-    private var onItemClickCallback: OnItemClickCallback? = null
+    companion object {
+        val DIFF_CALLBACK: DiffUtil.ItemCallback<StoryModel> =
+            object : DiffUtil.ItemCallback<StoryModel>() {
 
-    var storyList = mutableListOf<StoryModel>()
+                override fun areItemsTheSame(oldItem: StoryModel, newItem: StoryModel): Boolean {
+                    return oldItem.id == newItem.id
+                }
+
+                override fun areContentsTheSame(oldItem: StoryModel, newItem: StoryModel): Boolean {
+                    return oldItem == newItem
+                }
+
+            }
+    }
 
     class ListViewHolder(private val binding: StoryListItemBinding)
         : RecyclerView.ViewHolder(binding.root) {
@@ -23,6 +41,18 @@ class StoryAdapter : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
                 tvItemDate.text = story.createdAt
                 tvItemDescription.text = story.description
             }
+
+            itemView.setOnClickListener {
+                val intent = Intent(
+                    itemView.context,
+                    StoryDetailViewModel::class.java
+                )
+                intent.putExtra(EXTRAS_STORY, story.id)
+                itemView.context.startActivity(
+                    intent,
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(itemView.context as Activity).toBundle()
+                )
+            }
         }
     }
 
@@ -33,20 +63,10 @@ class StoryAdapter : RecyclerView.Adapter<StoryAdapter.ListViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
-        holder.bind(storyList[position])
-        holder.itemView.setOnClickListener {
-            onItemClickCallback!!.onItemClicked(storyList[position])
+        val item = getItem(position)
+        if (item != null) {
+            holder.bind(item)
         }
-    }
-
-    override fun getItemCount(): Int = storyList.size
-
-    fun setOnItemClickCallback(onItemClickCallback: OnItemClickCallback) {
-        this.onItemClickCallback = onItemClickCallback
-    }
-
-    interface OnItemClickCallback {
-        fun onItemClicked(data: StoryModel)
     }
 
 }
