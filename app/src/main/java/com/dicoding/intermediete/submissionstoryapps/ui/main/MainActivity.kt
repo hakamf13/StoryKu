@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.dicoding.intermediete.submissionstoryapps.R
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityMainBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.login.LoginActivity
+import com.dicoding.intermediete.submissionstoryapps.ui.maps.StoryMapsActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.AddNewStoryActivity
 import com.dicoding.intermediete.submissionstoryapps.ui.story.StoryAdapter
 import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
@@ -105,12 +106,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+
             R.id.action_logout -> {
                 mainViewModel.userLogout()
 
                 val intent = Intent(
                     this@MainActivity,
                     LoginActivity::class.java
+                )
+                startActivity(intent)
+                finish()
+            }
+
+            R.id.action_maps -> {
+                val intent = Intent(
+                    this@MainActivity,
+                    StoryMapsActivity::class.java
                 )
                 startActivity(intent)
                 finish()

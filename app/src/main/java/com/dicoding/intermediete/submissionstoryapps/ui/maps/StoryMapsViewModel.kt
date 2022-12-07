@@ -8,8 +8,6 @@ class StoryMapsViewModel(private val storyRepository: StoryRepository): ViewMode
 
     fun getUserToken() = storyRepository.getUserToken().asLiveData()
 
-    fun getStoriesWithLocation(token: String) {
-        storyRepository.getStoriesWithLocation(token)
-    }
+    fun getStoriesWithLocation(token: String) = storyRepository.getStoriesWithLocation(token)
 
 }

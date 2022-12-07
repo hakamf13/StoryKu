@@ -27,14 +27,13 @@ class StoryDetailActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(this)
     }
 
-    val story = intent.getStringExtra(EXTRAS_STORY).toString()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         setupView()
+        val story = intent.getStringExtra(EXTRAS_STORY).toString()
         setupAction(story)
     }
 

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.util.Pair
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -45,12 +46,17 @@ class StoryAdapter : PagingDataAdapter<StoryModel, StoryAdapter.ListViewHolder>(
             itemView.setOnClickListener {
                 val intent = Intent(
                     itemView.context,
-                    StoryDetailViewModel::class.java
+                    StoryDetailActivity::class.java
                 )
                 intent.putExtra(EXTRAS_STORY, story.id)
                 itemView.context.startActivity(
                     intent,
-                    ActivityOptionsCompat.makeSceneTransitionAnimation(itemView.context as Activity).toBundle()
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        itemView.context as Activity,
+                        Pair(binding.imageItemStory, "photo"),
+                        Pair(binding.tvItemName, "name"),
+                        Pair(binding.tvItemDescription, "description")
+                    ).toBundle()
                 )
             }
         }
