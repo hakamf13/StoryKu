@@ -38,7 +38,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyA0BbBrMgZXin2NmNRIUBbfiBOwodAELqY"/>
+            android:value="AIzaSyCZPjboaU9MlBlvJlRUtTWqaPfYLOkGA5s"/>
 
         <activity
             android:name=".ui.maps.StoryMapsActivity"

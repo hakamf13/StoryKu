@@ -2,9 +2,11 @@ package com.dicoding.intermediete.submissionstoryapps.ui.maps
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -22,6 +24,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
 
 class StoryMapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -56,6 +59,7 @@ class StoryMapsActivity : AppCompatActivity(), OnMapReadyCallback {
             isMapToolbarEnabled = true
         }
 
+        setMapsViewStyle()
         getMapsViewLocation()
         getMapsStoryLocation()
     }
@@ -75,6 +79,21 @@ class StoryMapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.fragment_maps) as SupportMapFragment
         mapFragment.getMapAsync(this)
+    }
+
+    private fun setMapsViewStyle() {
+        try {
+            val success =
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(
+                    this,
+                    R.raw.maps_style
+                ))
+            if (!success) {
+                Log.e("MAPS_STYLE", "Fetching failed")
+            }
+        } catch (e: Resources.NotFoundException) {
+            Log.e("MAPS_STYLE", "Maps style not found: ", e)
+        }
     }
 
     private fun getMapsViewLocation() {
@@ -130,7 +149,7 @@ class StoryMapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                 bounds,
                                 resources.displayMetrics.widthPixels,
                                 resources.displayMetrics.heightPixels,
-                                250
+                                200
                             )
                         )
                     }

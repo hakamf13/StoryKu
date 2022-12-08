@@ -134,7 +134,7 @@ class StoryRepository private constructor(
         storiesWithLocation.value = Result.Loading
         val client = apiService.getStoriesWithLocation(
             "Bearer $token",
-            50,
+            100,
             true
         )
         client.enqueue(object :  Callback<GetAllStoryResponse> {
