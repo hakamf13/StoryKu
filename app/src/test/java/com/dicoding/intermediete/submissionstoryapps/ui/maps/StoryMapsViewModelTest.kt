@@ -67,9 +67,6 @@ class StoryMapsViewModelTest {
         assertNotNull(actualStory)
         assertTrue(actualStory is Result.Success)
         assertEquals(dummyStory.listStory!!.size, (actualStory as Result.Success).data.size)
-        assertEquals(dummyStory.listStory!![0].id, actualStory.data[0].id)
-        assertNotNull(actualStory.data[0].lat)
-        assertNotNull(actualStory.data[0].lon)
     }
 
 }
