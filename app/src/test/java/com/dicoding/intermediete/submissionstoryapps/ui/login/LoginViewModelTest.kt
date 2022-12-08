@@ -1,8 +1,8 @@
-package com.dicoding.intermediete.submissionstoryapps.ui.register
+package com.dicoding.intermediete.submissionstoryapps.ui.login
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResponse
+import com.dicoding.intermediete.submissionstoryapps.data.remote.response.LoginResult
 import com.dicoding.intermediete.submissionstoryapps.data.repository.StoryRepository
 import com.dicoding.intermediete.submissionstoryapps.ui.DataDummy
 import com.dicoding.intermediete.submissionstoryapps.ui.MainDispatcherRule
@@ -20,10 +20,9 @@ import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
-class RegisterViewModelTest {
+class LoginViewModelTest{
 
     companion object {
-        private const val NAME = "name"
         private const val EMAIL = "email"
         private const val PASSWORD = "password"
     }
@@ -36,22 +35,22 @@ class RegisterViewModelTest {
 
     @Mock
     private lateinit var storyRepository: StoryRepository
-    private lateinit var registerViewModel: RegisterViewModel
+    private lateinit var loginViewModel: LoginViewModel
 
     @Before
     fun setup() {
-        registerViewModel = RegisterViewModel(storyRepository)
+        loginViewModel = LoginViewModel(storyRepository)
     }
 
     @Test
-    fun `When User Register Should Not Null and Return Success`() {
-        val dummyUser = DataDummy.generateDummyUserRegisterResponse()
-        val expectedUser = MutableLiveData<Result<RegisterResponse>>()
+    fun `When User Login Should Not Null and Return Success`() {
+        val dummyUser = DataDummy.generateDummyUserLoginResponse()
+        val expectedUser = MutableLiveData<Result<LoginResult>>()
         expectedUser.value = Result.Success(dummyUser)
-        Mockito.`when`(storyRepository.postRegister(NAME, EMAIL, PASSWORD)).thenReturn(expectedUser)
+        Mockito.`when`(storyRepository.postLogin(EMAIL, PASSWORD)).thenReturn(expectedUser)
 
-        val actualUser = registerViewModel.postRegister(NAME, EMAIL, PASSWORD).getOrAwaitValue()
-        Mockito.verify(storyRepository).postRegister(NAME, EMAIL, PASSWORD)
+        val actualUser = loginViewModel.postLogin(EMAIL, PASSWORD).getOrAwaitValue()
+        Mockito.verify(storyRepository).postLogin(EMAIL, PASSWORD)
         assertNotNull(actualUser)
         assertTrue(actualUser is Result.Success)
     }
