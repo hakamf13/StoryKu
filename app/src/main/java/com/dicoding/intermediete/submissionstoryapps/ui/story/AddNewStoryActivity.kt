@@ -152,12 +152,12 @@ class AddNewStoryActivity : AppCompatActivity() {
     ) {
         if (it.resultCode == RESULT_OK) {
             val myFile = File(currentPhotoPath)
-            val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
+//            val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
             getFile = myFile
             val result = rotateBitmap(
                 BitmapFactory.decodeFile(
                     getFile?.path,
-                ), isBackCamera
+                )
             )
             binding.viewPreviewImage.setImageBitmap(result)
         }
