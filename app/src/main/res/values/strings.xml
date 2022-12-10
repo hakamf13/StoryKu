@@ -25,4 +25,6 @@
     <string name="title_decriptionImage">Deskripsi</string>
     <string name="masukkan_deskripsi">Masukkan Deskripsi</string>
     <string name="unggah">UNGGAH</string>
+    <string name="tampilkan_lokasi">Tampilkan Lokasi</string>
+    <string name="maps">maps</string>
 </resources>

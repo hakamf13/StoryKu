@@ -2,44 +2,34 @@ package com.dicoding.intermediete.submissionstoryapps.ui.register
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.content.Context
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
-import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
-import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.RegisterResponse
+import androidx.appcompat.app.AppCompatActivity
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityRegisterBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.dicoding.intermediete.submissionstoryapps.utils.ViewModelFactory
+import com.dicoding.intermediete.submissionstoryapps.utils.Result
 
 class RegisterActivity : AppCompatActivity() {
-
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
     private val binding: ActivityRegisterBinding by lazy {
         ActivityRegisterBinding.inflate(layoutInflater)
     }
 
-    private lateinit var registerViewModel: RegisterViewModel
+    private val registerViewModel: RegisterViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         setupView()
-        setupViewModel()
         setupAction()
         setupAnimation()
     }
@@ -55,21 +45,6 @@ class RegisterActivity : AppCompatActivity() {
             )
         }
         supportActionBar?.hide()
-    }
-
-    private fun setupViewModel() {
-
-        registerViewModel = ViewModelProvider(
-            this@RegisterActivity,
-            ViewModelFactory(UserPreference.getInstance(dataStore))
-        )[RegisterViewModel::class.java]
-
-        registerViewModel.isLoading.observe(
-            this@RegisterActivity
-        ) { loader ->
-            showLoading(loader)
-        }
-
     }
 
     private fun setupAction() {
@@ -93,39 +68,43 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 else -> {
-                    val client = ApiConfig.getApiService().postRegister(name, email, password)
-                    client.enqueue(object : Callback<RegisterResponse> {
+                    postRegister(name, email, password)
+                }
+            }
+        }
+    }
 
-                        override fun onResponse(
-                            call: Call<RegisterResponse>,
-                            response: Response<RegisterResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val responseBody = response.body()!!
-                                if (!responseBody.error) {
-                                    Log.d("REGISTER", "Register success")
-                                    AlertDialog.Builder(this@RegisterActivity).apply {
-                                        setTitle("Yes!")
-                                        setMessage("Akunnya sudah jadi nih. Yuk, login dan bagikan pengalamanmu!.")
-                                        setPositiveButton("Lanjut") { _, _ ->
-                                            finish()
-                                        }
-                                        create()
-                                        show()
-                                    }
-                                } else {
-                                    Log.e("REGISTER_ERROR", "errorRegister: ${responseBody.registerResult}")
-                                }
-                            } else {
-                                Log.e("REGISTER_ERROR", "registerError: ${response.message()}")
+    private fun postRegister(name: String, email: String, password: String) {
+        registerViewModel.postRegister(name, email, password).observe(this@RegisterActivity) {
+            if (it != null) {
+                when (it) {
+
+                    is Result.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    is Result.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        AlertDialog.Builder(this@RegisterActivity).apply {
+                            setTitle("Yes!")
+                            setMessage("Akunnya sudah jadi nih, Yuk masuk dan bagikan pengalamanmu!.")
+                            setPositiveButton("Lanjut") { _, _ ->
+                                finish()
                             }
+                            create()
+                            show()
                         }
+                    }
 
-                        override fun onFailure(call: Call<RegisterResponse>, t: Throwable) {
-                            Log.e("REGISTER_ERROR", "registerError: ${t.message.toString()}")
-                        }
+                    is Result.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(
+                            this@RegisterActivity,
+                            it.error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
 
-                    })
                 }
             }
         }
@@ -150,9 +129,5 @@ class RegisterActivity : AppCompatActivity() {
             start()
         }
 
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 }

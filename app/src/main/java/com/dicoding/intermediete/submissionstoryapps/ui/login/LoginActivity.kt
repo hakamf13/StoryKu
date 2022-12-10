@@ -2,42 +2,31 @@ package com.dicoding.intermediete.submissionstoryapps.ui.login
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
-import com.dicoding.intermediete.submissionstoryapps.ViewModelFactory
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserModel
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
-import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.LoginResponse
+import androidx.appcompat.app.AppCompatActivity
+import com.dicoding.intermediete.submissionstoryapps.data.remote.response.LoginResult
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityLoginBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.dicoding.intermediete.submissionstoryapps.utils.ViewModelFactory
+import com.dicoding.intermediete.submissionstoryapps.utils.Result
 
 class LoginActivity : AppCompatActivity() {
-
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
     private val binding: ActivityLoginBinding by lazy {
         ActivityLoginBinding.inflate(layoutInflater)
     }
 
-    private lateinit var loginViewModel: LoginViewModel
-
-    private lateinit var user: UserModel
+    private val loginViewModel: LoginViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +34,6 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupView()
-        setupViewModel()
         setupAction()
         setupAnimation()
 
@@ -64,26 +52,7 @@ class LoginActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    private fun setupViewModel() {
-        loginViewModel = ViewModelProvider(
-            this@LoginActivity,
-            ViewModelFactory(UserPreference.getInstance(dataStore))
-        )[LoginViewModel::class.java]
-
-        loginViewModel.getUserToken().observe(
-            this@LoginActivity
-        ) {
-            this.user = it
-        }
-
-        loginViewModel.isLoading.observe(
-            this@LoginActivity
-        ) { loader ->
-            showLoading(loader)
-        }
-    }
-
-    private fun setupAction(){
+    private fun setupAction() {
         binding.loginButton.setOnClickListener {
             val email = binding.edLoginEmail.text.toString()
             val password = binding.edLoginPassword.text.toString()
@@ -98,49 +67,7 @@ class LoginActivity : AppCompatActivity() {
                 }
 
                 else -> {
-//                    loginViewModel.login(email, password)
-                    val client = ApiConfig.getApiService().postLogin(email, password)
-                    client.enqueue(object : Callback<LoginResponse> {
-
-                        override fun onResponse(
-                            call: Call<LoginResponse>,
-                            response: Response<LoginResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val responseBody = response.body()!!
-                                if (!responseBody.error) {
-                                    loginViewModel.userLogin()
-                                    loginViewModel.userSave(responseBody.loginResult)
-                                    Log.d("LOGIN", responseBody.loginResult.toString())
-                                    AlertDialog.Builder(
-                                        this@LoginActivity
-                                    ).apply {
-                                        setTitle("Yes!")
-                                        setMessage("Kamu berhasil masuk. Sudah tidak sabar untuk membagikan pengalamanmu ya?")
-                                        setPositiveButton("Lanjut") { _, _ ->
-                                            val intent = Intent(
-                                                this@LoginActivity,
-                                                MainActivity::class.java
-                                            )
-                                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                                            startActivity(intent)
-                                            finish()
-                                        }
-                                        create()
-                                        show()
-                                    }
-                                } else {
-                                    Log.e("LOGIN_ERROR", "loginError: ${responseBody.message}")
-                                }
-                            } else {
-                                Log.e("LOGIN_ERROR", "loginError: ${response.message()}")
-                            }
-                        }
-
-                        override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                            Log.e("LOGIN_ERROR", "loginError: ${t.message.toString()}")
-                        }
-                    })
+                    postLogin(email, password)
                 }
             }
         }
@@ -169,7 +96,52 @@ class LoginActivity : AppCompatActivity() {
 
     }
 
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    private fun postLogin(email: String,password: String) {
+        loginViewModel.postLogin(email, password).observe(this@LoginActivity) {
+            if (it != null) {
+                when (it) {
+
+                    is Result.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    is Result.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        val user = it.data
+                        userSave(user)
+
+                        AlertDialog.Builder(this@LoginActivity).apply {
+                            setTitle("Yes!")
+                            setMessage("Kamu berhasil masuk. Sudah tidak sabar untuk membagikan pengalamanmu ya?")
+                            setPositiveButton("Lanjut") { _, _ ->
+                                val intent = Intent(
+                                    this@LoginActivity,
+                                    MainActivity::class.java
+                                )
+                                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                                startActivity(intent)
+                                finish()
+                            }
+                            create()
+                            show()
+                        }
+                    }
+
+                    is Result.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(
+                            this@LoginActivity,
+                            it.error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                }
+            }
+        }
+    }
+
+    private fun userSave(user: LoginResult) {
+        loginViewModel.userSave(user)
     }
 }

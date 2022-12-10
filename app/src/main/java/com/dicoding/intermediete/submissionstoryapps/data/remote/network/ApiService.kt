@@ -28,15 +28,26 @@ interface ApiService {
 
     @Multipart
     @POST("v1/stories")
-    fun getStory(
+    fun postStory(
         @Header("Authorization") Bearer: String,
         @Part file: MultipartBody.Part,
-        @Part("description") description: RequestBody
+        @Part("description") description: RequestBody,
+        @Part("lat") lat: RequestBody? = null,
+        @Part("lon") lon: RequestBody? = null
     ): Call<AddNewStoryResponse>
 
     @GET("v1/stories")
-    fun getStoryList(
-        @Header("Authorization") Bearer: String
+    fun getStoriesWithLocation(
+        @Header("Authorization") Bearer: String,
+        @Query("size") size: Int? = null,
+        @Query("location") location: Boolean? = null
     ): Call<GetAllStoryResponse>
+
+    @GET("v1/stories")
+    suspend fun getStoryList(
+        @Header("Authorization") Bearer: String,
+        @Query("page") page: Int? = null,
+        @Query("size") size: Int? = null
+    ): GetAllStoryResponse
 
 }

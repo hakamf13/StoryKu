@@ -1,71 +1,72 @@
 package com.dicoding.intermediete.submissionstoryapps.ui.story
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
-import com.dicoding.intermediete.submissionstoryapps.*
-import com.dicoding.intermediete.submissionstoryapps.data.local.UserPreference
-import com.dicoding.intermediete.submissionstoryapps.data.remote.network.ApiConfig
-import com.dicoding.intermediete.submissionstoryapps.data.remote.response.AddNewStoryResponse
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.dicoding.intermediete.submissionstoryapps.databinding.ActivityAddNewStoryBinding
 import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity
-import com.dicoding.intermediete.submissionstoryapps.ui.main.MainActivity.Companion.STORY_UPLOADED
-import com.dicoding.intermediete.submissionstoryapps.ui.welcome.WelcomeActivity
+import com.dicoding.intermediete.submissionstoryapps.utils.*
+import com.dicoding.intermediete.submissionstoryapps.utils.Utils.createCustomTempFile
+import com.dicoding.intermediete.submissionstoryapps.utils.Utils.reduceFileImage
+import com.dicoding.intermediete.submissionstoryapps.utils.Utils.rotateBitmap
+import com.dicoding.intermediete.submissionstoryapps.utils.Utils.uriToFile
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 
 @Suppress("DEPRECATION")
 class AddNewStoryActivity : AppCompatActivity() {
 
     companion object {
-        const val CAMERA_X_RESULT = 200
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val REQUEST_CODE_PERMISSIONS = 10
     }
-
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
     private val binding: ActivityAddNewStoryBinding by lazy {
         ActivityAddNewStoryBinding.inflate(layoutInflater)
     }
 
-    private lateinit var addNewStoryViewModel: AddNewStoryViewModel
+    private val addNewStoryViewModel: AddNewStoryViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
 
     private lateinit var currentPhotoPath: String
 
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
     private var getFile: File? = null
+
+    private var userLocation: Location? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         if (!allPermissionsGranted()) {
             ActivityCompat.requestPermissions(
@@ -75,8 +76,8 @@ class AddNewStoryActivity : AppCompatActivity() {
             )
         }
 
+
         setupView()
-        setupViewModel()
         setupAction()
     }
 
@@ -90,36 +91,7 @@ class AddNewStoryActivity : AppCompatActivity() {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
-        supportActionBar?.hide()
-    }
-
-    private fun setupViewModel() {
-
-        addNewStoryViewModel = ViewModelProvider(
-            this@AddNewStoryActivity,
-            ViewModelFactory(UserPreference.getInstance(dataStore))
-        )[AddNewStoryViewModel::class.java]
-
-        addNewStoryViewModel.getUserToken().observe(
-            this@AddNewStoryActivity
-        ) { session ->
-            if (session.isLogin) {
-                Log.d("TOKEN", "Token has been found")
-            } else {
-                startActivity(Intent(
-                    this@AddNewStoryActivity,
-                    WelcomeActivity::class.java
-                ))
-                finish()
-            }
-        }
-
-        addNewStoryViewModel.isLoading.observe(
-            this@AddNewStoryActivity
-        ) { loader ->
-            showLoading(loader)
-        }
-
+        supportActionBar?.title = "Tambah Story"
     }
 
     private fun setupAction() {
@@ -134,6 +106,14 @@ class AddNewStoryActivity : AppCompatActivity() {
 
         binding.buttonUpload.setOnClickListener {
             uploadImage()
+        }
+
+        binding.locationSwitch.setOnCheckedChangeListener { _, isCheked ->
+            if (isCheked) {
+                getMyLastLocation()
+            } else {
+                userLocation = null
+            }
         }
 
     }
@@ -172,12 +152,12 @@ class AddNewStoryActivity : AppCompatActivity() {
     ) {
         if (it.resultCode == RESULT_OK) {
             val myFile = File(currentPhotoPath)
-            val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
+//            val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
             getFile = myFile
             val result = rotateBitmap(
                 BitmapFactory.decodeFile(
                     getFile?.path,
-                ), isBackCamera
+                )
             )
             binding.viewPreviewImage.setImageBitmap(result)
         }
@@ -198,74 +178,100 @@ class AddNewStoryActivity : AppCompatActivity() {
         }
     }
 
-    private fun uploadImage() {
-        if (getFile != null) {
+    private val requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            when {
+                permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false -> {
+                    getMyLastLocation()
+                }
 
-            addNewStoryViewModel.getUserToken().observe(
-                this@AddNewStoryActivity
-            ) {
-                if (it.isLogin) {
-                    val token = "Bearer ${it.token}"
-                    val file = reduceFileImage(getFile as File)
-                    val description = binding.edDescriptionImage.text
-                        .toString()
-                        .trim()
-                        .toRequestBody("text/plain".toMediaType())
-                    val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    val imageMultipartBody: MultipartBody.Part = MultipartBody.Part.createFormData(
-                        "photo",
-                        file.name,
-                        requestImageFile
-                    )
-                    val client = ApiConfig.getApiService().getStory(token, imageMultipartBody, description)
-                    client.enqueue(object : Callback<AddNewStoryResponse> {
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false -> {
+                    getMyLastLocation()
+                }
 
-                        override fun onResponse(
-                            call: Call<AddNewStoryResponse>,
-                            response: Response<AddNewStoryResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val responseBody = response.body()!!
-                                if (!responseBody.error) {
-                                    Log.d("STORY", "Story has been fetched")
-                                    AlertDialog.Builder(
-                                        this@AddNewStoryActivity
-                                    ).apply {
-                                        setTitle("Yes!")
-                                        setMessage("Story berhasil di-upload")
-                                        setPositiveButton("Lanjut") { _, _ ->
-                                            val intent = Intent(
-                                                this@AddNewStoryActivity,
-                                                MainActivity::class.java
-                                            )
-                                            intent.putExtra(STORY_UPLOADED, true)
-                                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                                            startActivity(intent)
-                                            finish()
-                                        }
-                                    }
-                                } else {
-                                    Log.e("STORY_ERROR", "Story not fetch yet")
-                                }
-                            } else {
-                                Log.e("STORY_ERROR", "Story not fetch yet")
-                            }
-                        }
-
-                        override fun onFailure(call: Call<AddNewStoryResponse>, t: Throwable) {
-                            Log.e("STORY_ERROR", "Story not fetch yet")
-                        }
-
-                    })
+                else -> {
+                    binding.locationSwitch.isChecked = false
                 }
             }
+        }
 
+    private fun uploadImage() {
+        if (getFile != null) {
+            val file = reduceFileImage(getFile as File)
+            val description = binding.edDescriptionImage.text
+                .toString()
+                .trim()
+                .toRequestBody("text/plain".toMediaType())
+            val lat = userLocation?.latitude?.toString()?.toRequestBody("text/plain".toMediaType())
+            val lon = userLocation?.longitude?.toString()?.toRequestBody("text/plain".toMediaType())
+            val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            val imageMultipartBody: MultipartBody.Part = MultipartBody.Part.createFormData(
+                "photo",
+                file.name,
+                requestImageFile
+            )
+            uploadStory(imageMultipartBody, description, lat, lon)
         } else {
             Toast.makeText(
                 this@AddNewStoryActivity,
-                "Masukkan gambar dan deskripsinya dulu ya!",
+                "Masukkan gambarnya dulu ya!",
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    private fun uploadStory(
+        imageMultipartBody: MultipartBody.Part,
+        description: RequestBody,
+        lat: RequestBody?,
+        lon: RequestBody?
+    ) {
+        addNewStoryViewModel.getUserToken().observe(
+            this@AddNewStoryActivity
+        ) { it ->
+            if (it.token != "") {
+                addNewStoryViewModel.uploadImage(it.token, imageMultipartBody, description, lat, lon).observe(
+                    this@AddNewStoryActivity
+                ) {
+                    if (it != null) {
+                        when (it) {
+
+                            is Result.Loading -> {
+                                showLoading(true)
+                            }
+
+                            is Result.Success -> {
+                                showLoading(false)
+                                AlertDialog.Builder(this).apply {
+                                    setTitle("Yes!")
+                                    setMessage("Story berhasil diunggah!!.")
+                                    setPositiveButton("Lanjut") { _, _ ->
+                                        val intent = Intent(
+                                            this@AddNewStoryActivity,
+                                            MainActivity::class.java
+                                        )
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    create()
+                                    show()
+                                }
+                            }
+
+                            is Result.Error -> {
+                                showLoading(false)
+                                Toast.makeText(
+                                    this@AddNewStoryActivity,
+                                    it.error,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -289,6 +295,32 @@ class AddNewStoryActivity : AppCompatActivity() {
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun checkPermission(permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this@AddNewStoryActivity,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getMyLastLocation() {
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) && checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener {
+                if (it != null) {
+                    userLocation = it
+                } else {
+                    binding.locationSwitch.isChecked = false
+                }
+            }
+        } else {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
     }
 
     private fun showLoading(isLoading: Boolean) {
