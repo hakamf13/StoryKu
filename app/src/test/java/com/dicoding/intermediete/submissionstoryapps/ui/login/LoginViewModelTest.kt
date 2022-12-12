@@ -9,6 +9,7 @@ import com.dicoding.intermediete.submissionstoryapps.ui.MainDispatcherRule
 import com.dicoding.intermediete.submissionstoryapps.ui.getOrAwaitValue
 import com.dicoding.intermediete.submissionstoryapps.utils.Result
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -23,7 +24,7 @@ import org.mockito.junit.MockitoJUnitRunner
 class LoginViewModelTest{
 
     companion object {
-        private const val EMAIL = "email"
+        private const val EMAIL = "test@gmail.com"
         private const val PASSWORD = "password"
     }
 
@@ -53,6 +54,14 @@ class LoginViewModelTest{
         Mockito.verify(storyRepository).postLogin(EMAIL, PASSWORD)
         assertNotNull(actualUser)
         assertTrue(actualUser is Result.Success)
+        assertEquals(dummyUser, (actualUser as Result.Success).data)
+    }
+
+    @Test
+    fun `When User Success to Login Should Save User`() = runTest {
+        val dummyUser = DataDummy.generateDummyUserLoginResponse()
+        loginViewModel.userSave(dummyUser)
+        Mockito.verify(storyRepository).userSave(dummyUser)
     }
 
 }

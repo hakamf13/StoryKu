@@ -46,7 +46,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `When User Account Should Not Null`() {
+    fun `When Get User Account Should Not Null and Return Success`() {
         val dummyUser = DataDummy.generateDummyUserLoginResponse()
         val expectedUser = MutableLiveData<LoginResult>()
         expectedUser.value = dummyUser
@@ -55,6 +55,7 @@ class MainViewModelTest {
         val actualUser = mainViewModel.getUserToken().getOrAwaitValue()
         Mockito.verify(storyRepository).getUserToken()
         assertNotNull(actualUser)
+        assertEquals(dummyUser, actualUser)
     }
 
     @Test
@@ -76,5 +77,11 @@ class MainViewModelTest {
         assertEquals(dummyStory, differ.snapshot())
         assertEquals(dummyStory.size, differ.snapshot().size)
         assertEquals(dummyStory[0].name, differ.snapshot()[0]!!.name)
+    }
+
+    @Test
+    fun `When User Logout Should Success`() = runTest {
+        mainViewModel.userLogout()
+        Mockito.verify(storyRepository).userLogout()
     }
 }

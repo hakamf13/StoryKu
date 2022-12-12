@@ -44,7 +44,7 @@ class StoryMapsViewModelTest {
     }
 
     @Test
-    fun `When User Account Should Not Null`() {
+    fun `When Get User Account Should Not Null and Return Success`() {
         val dummyUser = DataDummy.generateDummyUserLoginResponse()
         val expectedUser = MutableLiveData<LoginResult>()
         expectedUser.value = dummyUser
@@ -53,6 +53,7 @@ class StoryMapsViewModelTest {
         val actualUser = storyMapsViewModel.getUserToken().getOrAwaitValue()
         Mockito.verify(storyRepository).getUserToken()
         assertNotNull(actualUser)
+        assertEquals(dummyUser, actualUser)
     }
 
     @Test
@@ -67,6 +68,7 @@ class StoryMapsViewModelTest {
         assertNotNull(actualStory)
         assertTrue(actualStory is Result.Success)
         assertEquals(dummyStory.listStory!!.size, (actualStory as Result.Success).data.size)
+        assertEquals(dummyStory.listStory!![0].id, actualStory.data[0].id)
     }
 
 }

@@ -51,7 +51,7 @@ class AddNewStoryViewModelTest{
     }
 
     @Test
-    fun `When Upload Story Should Not Null and Result Success`() {
+    fun `When Upload Story Should Not Null and Return Success`() {
         val file = mock(File::class.java)
         val requestImageFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
         val imageMultipartBody = MultipartBody.Part.createFormData(
@@ -74,7 +74,7 @@ class AddNewStoryViewModelTest{
     }
 
     @Test
-    fun `When User Account Should Not Null`() {
+    fun `When Get User Account Should Not Null and Return Success`() {
         val dummyUser = DataDummy.generateDummyUserLoginResponse()
         val expectedUser = MutableLiveData<LoginResult>()
         expectedUser.value = dummyUser
@@ -83,6 +83,7 @@ class AddNewStoryViewModelTest{
         val actualUser = addNewStoryViewModel.getUserToken().getOrAwaitValue()
         Mockito.verify(storyRepository).getUserToken()
         assertNotNull(actualUser)
+        assertEquals(dummyUser, actualUser)
     }
 
 }
