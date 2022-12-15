@@ -1,0 +1,39 @@
+Skenario Pengujian :
+
+RegisterViewModelTest
+1. Memastikan data user yang dikirim tidak null
+2. Memastikan response kembalian bernilai Result.Success
+
+LoginViewModelTest
+1. Memastikan data user yang diambil tidak null
+2. Memastikan response kembalian bernilai Result.Success
+3. Memastikan data user yang diambil benar
+4. Memastikan data user yang sudah login tersimpan
+
+AddNewStoryViewModelTest
+1. Memastikan data story yang diunggah tidak null
+2. Memastikan data user yang sudah login tidak null
+3. Memastikan response kembalian bernilai Result.Success
+4. Memastikan data user yang sudah login benar
+
+StoryDetailViewModelTest
+1. Memastikan data story yang diambil tidak null
+2. Memastikan jumlah data story yang didapatkan sesuai
+3. Memastikan response kembalian bernilai Result.Success
+
+StoryMapsViewModelTest
+1. Memastikan data user yang sudah login tidak null
+2. Memastikan data user yang sudah login sesuai
+3. Memastikan data story dengan lokasi yang didapatkan tidak null
+4. Memastikan data story dengan lokasi yang didapatkan benar
+5. Memastikan jumlah data story dengan lokasi yang didapatkan sesuai
+6. Memastikan response kembalian bernilai Result.Success
+
+MainViewModelTest
+1. Memastikan data user yang sudah login tidak null
+2. Memastikan data story yang didapatkan tidak null
+3. Memastikan pengambilan data story dengan paging sudah benar
+4. Memastikan jumlah data story yang didapatkan sesuai
+5. Memastikan method userLogout benar terpanggil
+6. Memastikan data user yang sudah login benar
+
