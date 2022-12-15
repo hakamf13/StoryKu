@@ -66,7 +66,7 @@ class AddNewStoryViewModelTest{
         val dummyStory = DataDummy.generateDummyAddNewStoryResponse()
         val expectedStory = MutableLiveData<Result<AddNewStoryResponse>>()
         expectedStory.value = Result.Success(dummyStory)
-        Mockito.`when`(addNewStoryViewModel.uploadImage(TOKEN, imageMultipartBody, description, lat, lon)).thenReturn(expectedStory)
+        Mockito.`when`(storyRepository.uploadImageStory(TOKEN, imageMultipartBody, description, lat, lon)).thenReturn(expectedStory)
 
         val actualStory = addNewStoryViewModel.uploadImage(TOKEN, imageMultipartBody, description, lat, lon).getOrAwaitValue()
         assertNotNull(actualStory)

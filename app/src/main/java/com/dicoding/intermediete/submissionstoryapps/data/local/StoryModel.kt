@@ -8,8 +8,8 @@ import com.google.gson.annotations.SerializedName
 @Entity(tableName = "story")
 data class StoryModel(
 
-    @PrimaryKey
     @field:ColumnInfo(name = "id")
+    @PrimaryKey
     @field:SerializedName("id")
     val id: String,
 

@@ -17,7 +17,7 @@ class StoryRemoteMediator(
     private val token: String
 ): RemoteMediator<Int, StoryModel>() {
 
-    companion object {
+    private companion object {
         const val INITIAL_PAGE_INDEX = 1
     }
 
@@ -76,26 +76,26 @@ class StoryRemoteMediator(
     }
 
     private suspend fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, StoryModel>): RemoteKeys? {
-        return state.pages.lastOrNull {
-            it.data.isNotEmpty()
-        }?.data?.firstOrNull()?.let { position ->
-            storyDatabase.remoteKeysDao().getRemoteKeysId(position.id)
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.id?.let { id ->
+                storyDatabase.remoteKeysDao().getRemoteKeysId(id)
+            }
         }
     }
 
     private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, StoryModel>): RemoteKeys? {
-        return state.pages.lastOrNull {
+        return state.pages.firstOrNull {
             it.data.isNotEmpty()
-        }?.data?.lastOrNull()?.let { data ->
+        }?.data?.firstOrNull()?.let { data ->
             storyDatabase.remoteKeysDao().getRemoteKeysId(data.id)
         }
     }
 
     private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, StoryModel>): RemoteKeys? {
-        return state.anchorPosition?.let { data ->
-            state.closestItemToPosition(data)?.id?.let { id ->
-                storyDatabase.remoteKeysDao().getRemoteKeysId(id)
-            }
+        return state.pages.lastOrNull {
+            it.data.isNotEmpty()
+        }?.data?.lastOrNull()?.let { data ->
+            storyDatabase.remoteKeysDao().getRemoteKeysId(data.id)
         }
     }
 
