@@ -124,7 +124,6 @@ class MainActivity : AppCompatActivity() {
                     StoryMapsActivity::class.java
                 )
                 startActivity(intent)
-                finish()
             }
         }
         return super.onOptionsItemSelected(item)
